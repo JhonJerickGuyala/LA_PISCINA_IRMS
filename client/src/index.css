@@ -1,3 +1,44 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@font-face {
+  font-family: 'FontHeader';
+  src: url('/fonts/PlayfairDisplay-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'FontBodyRegular';
+  src: url('/fonts/SourceSans3-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'FontBodyBold';
+  src: url('/fonts/SourceSans3-Bold.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'FontBodyItalic';
+  src: url('/fonts/SourceSans3-Italic.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+
+.header{
+    font-family: 'FontHeader', sans-serif;
+}
+
+body {
+    font-family: 'FontBodyRegular', sans-serif;
+}
+
+h1, h2, h3 {
+    font-family: 'FontHeader', sans-serif;
+}
