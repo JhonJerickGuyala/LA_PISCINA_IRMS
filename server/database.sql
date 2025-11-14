@@ -8,3 +8,5 @@ CREATE TABLE usertbl (
     role ENUM('customer', 'receptionist', 'owner') NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+INSERT INTO `usertbl` (`username`, `email`, `phone`, `password`, `role`, `created_at`) VALUES ('receptionist', 'receptionist@mail.com', NULL, '$2a$12$KSbauU6r3jbjf61r/ghyHefQ5zQ/neHEcJk75tDe6eGjARjm5QfE2', 'receptionist', NOW()), ('owner', 'owner@mail.com', NULL, '$2a$12$KSbauU6r3jbjf61r/ghyHefQ5zQ/neHEcJk75tDe6eGjARjm5QfE2', 'owner', NOW());
