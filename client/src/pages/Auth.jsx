@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff, ArrowLeft } from "lucide-react";
+import { useAuth } from "./AuthContext";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -21,6 +22,7 @@ const Auth = () => {
   });
 
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -67,10 +69,15 @@ const Auth = () => {
           password: form.password,
         });
 
-        const role = res.data.user.role;
-        if (role === "customer") navigate("/customer");
-        else if (role === "receptionist") navigate("/receptionist");
-        else if (role === "owner") navigate("/owner");
+        const userData = res.data.user;
+        
+        // Use the auth context to login
+        login(userData);
+
+        // Navigate based on role
+        if (userData.role === "customer") navigate("/customer");
+        else if (userData.role === "receptionist") navigate("/receptionist");
+        else if (userData.role === "owner") navigate("/owner");
       } else {
         if (form.password !== form.confirmPassword) {
           alert("Passwords do not match");
