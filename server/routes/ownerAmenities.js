@@ -3,6 +3,7 @@ const router = express.Router();
 const mysql = require('mysql2/promise');
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs'); // ← IMPORTANTE: Ito ang taga-bura ng file
 
 const dbConfig = {
   host: 'localhost', user: 'root', password: '', database: 'irms_db'
@@ -11,7 +12,8 @@ const dbConfig = {
 // --- MULTER CONFIG ---
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, 'uploads/am_images/'); 
+    // Siguraduhing tama ang path (kailangan umakyat ng isang folder mula routes)
+    cb(null, path.join(__dirname, '../uploads/am_images/')); 
   },
   filename: function (req, file, cb) {
     const cleanName = file.originalname.replace(/\s+/g, '_');
@@ -21,7 +23,6 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 // GET All Amenities
-// Route: /api/owner/amenities
 router.get('/', async (req, res) => {
   try {
     const connection = await mysql.createConnection(dbConfig);
@@ -95,6 +96,21 @@ router.put('/:id', upload.single('image'), async (req, res) => {
     const connection = await mysql.createConnection(dbConfig);
 
     if (req.file) {
+      // KUNG MAY BAGONG IMAGE: Burahin muna ang luma para makatipid sa space
+      const [rows] = await connection.execute('SELECT image FROM amenitiestbl WHERE id = ?', [id]);
+      if (rows.length > 0) {
+          const oldImage = rows[0].image;
+          // Huwag burahin ang default.jpg o online links
+          if (oldImage && oldImage !== 'default.jpg' && !oldImage.startsWith('http')) {
+              const oldPath = path.join(__dirname, '../uploads/am_images', oldImage);
+              // Check kung nag-eexist bago burahin
+              if (fs.existsSync(oldPath)) {
+                  fs.unlinkSync(oldPath);
+              }
+          }
+      }
+
+      // Tapos i-save ang bago
       await connection.execute(
         'UPDATE amenitiestbl SET name=?, description=?, price=?, type=?, available=?, capacity=?, image=? WHERE id=?',
         [name, description, price, finalType, available, capacity, req.file.filename, id]
@@ -113,15 +129,39 @@ router.put('/:id', upload.single('image'), async (req, res) => {
   }
 });
 
-// DELETE Amenity
+// DELETE Amenity (WITH FILE DELETION)
 router.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const connection = await mysql.createConnection(dbConfig);
+
+    // 1. HANAPIN MUNA ANG FILENAME BAGO I-DELETE SA DB
+    const [rows] = await connection.execute('SELECT image FROM amenitiestbl WHERE id = ?', [id]);
+    
+    if (rows.length > 0) {
+        const imageFilename = rows[0].image;
+
+        // 2. BURAHIN ANG FILE SA FOLDER (Kung hindi default at hindi online link)
+        if (imageFilename && imageFilename !== 'default.jpg' && !imageFilename.startsWith('http')) {
+            const filePath = path.join(__dirname, '../uploads/am_images', imageFilename);
+            
+            // Check kung nag-eexist yung file, tapos burahin
+            if (fs.existsSync(filePath)) {
+                fs.unlink(filePath, (err) => {
+                    if (err) console.error("Error deleting file:", err);
+                    else console.log("File deleted successfully:", imageFilename);
+                });
+            }
+        }
+    }
+
+    // 3. BURAHIN NA SA DATABASE
     await connection.execute('DELETE FROM amenitiestbl WHERE id = ?', [id]);
+    
     await connection.end();
     res.json({ message: 'Amenity deleted successfully' });
   } catch (error) {
+    console.error("Delete error:", error);
     res.status(500).json({ message: 'Error deleting amenity' });
   }
 });
