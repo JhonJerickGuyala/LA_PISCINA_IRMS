@@ -1,16 +1,17 @@
 const express = require('express');
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs'); 
-const transporter = require('../email'); 
-
 const router = express.Router();
+
+// 1. IMPORT ANG CONFIGS (Isang akyat lang ../ kasi nasa routes folder ka)
+const transporter = require('../config/email'); 
+const db = require('../config/db'); 
 
 // ---------------- SIGNUP ----------------
 router.post('/signup', async (req, res) => {
   const { username, email, password, confirmPassword } = req.body;
   
-  // KUNIN ANG CONNECTION GALING SERVER.JS
-  const db = req.app.locals.db;
+  // TINANGGAL KO NA YUNG: const db = req.app.locals.db; (Di na kailangan)
 
   // Validate required fields
   if (!username || !email || !password || !confirmPassword) {
@@ -27,7 +28,7 @@ router.post('/signup', async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
     const role = 'customer';
 
-    // Insert into database
+    // Insert into database (Direct gamit na ang db)
     const [result] = await db.query(
       'INSERT INTO usertbl (username, email, password, role) VALUES (?, ?, ?, ?)',
       [username, email, hashedPassword, role]
@@ -48,8 +49,7 @@ router.post('/signup', async (req, res) => {
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
   
-  // KUNIN ANG CONNECTION GALING SERVER.JS
-  const db = req.app.locals.db;
+  // TINANGGAL KO NA RIN DITO
 
   if (!email || !password) {
     return res.status(400).json({ message: 'Email and password are required' });
@@ -82,8 +82,7 @@ router.post('/forgot-password', async (req, res) => {
   try {
     const { email } = req.body;
     
-    // FIX: Idinagdag ko ito dahil nawawala sa original code mo
-    const db = req.app.locals.db;
+    // TINANGGAL KO NA RIN DITO
     
     const [users] = await db.query('SELECT * FROM usertbl WHERE email = ?', [email]);
     const user = users[0];
@@ -127,8 +126,7 @@ router.post('/reset-password', async (req, res) => {
   try {
     const { token, password, confirmPassword } = req.body;
     
-    // FIX: Idinagdag ko ito
-    const db = req.app.locals.db;
+    // TINANGGAL KO NA RIN DITO
 
     if (password !== confirmPassword) {
       return res.status(400).json({ message: 'Passwords do not match.' });
